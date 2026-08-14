@@ -7,7 +7,7 @@ ARM shape (`VM.Standard.A1.Flex`). In the Frankfurt region this shape constantly
 ## How it works
 
 - Runs every 15 minutes (`.github/workflows/hunt.yml`).
-- Each run spends about 4 minutes trying, stepping down through
+- Each run spends about 25 minutes trying, stepping down through
   **4 OCPU / 24 GB → 2/12 → 1/6** across every availability domain in the tenancy.
   The first shape that gets accepted is the one you keep.
 - Availability domains and the latest Ubuntu 24.04 aarch64 image are looked up from the

@@ -18,8 +18,12 @@ concurrency:
 jobs:
   hunt:
     runs-on: ubuntu-latest
-    timeout-minutes: 12
+    # GitHub zamanlanmis isleri "best effort" calistiriyor: */15 yazsak da pratikte
+    # ~70 dakikada bir atesleniyor. O yuzden her calisma uzun surer, boylece
+    # tetikleme seyrek olsa da kapsama genis kalir.
+    timeout-minutes: 32
     env:
+      SURE: '1500'
       OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
       OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
       OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
