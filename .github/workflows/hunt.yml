@@ -1,0 +1,74 @@
+name: A1 kapasite avi
+
+on:
+  schedule:
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+# Fork'lardan gelen PR'lar bu workflow'u tetikleyemez; secret'lara yalnizca
+# zamanlanmis ve elle tetiklenen calismalar erisir.
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: hunt
+  cancel-in-progress: false
+
+jobs:
+  hunt:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    env:
+      OCI_CLI_USER: ${{ secrets.OCI_CLI_USER }}
+      OCI_CLI_TENANCY: ${{ secrets.OCI_CLI_TENANCY }}
+      OCI_CLI_FINGERPRINT: ${{ secrets.OCI_CLI_FINGERPRINT }}
+      OCI_CLI_KEY_CONTENT: ${{ secrets.OCI_CLI_KEY_CONTENT }}
+      OCI_CLI_REGION: ${{ secrets.OCI_CLI_REGION }}
+      SUBNET_ID: ${{ secrets.OCI_SUBNET_ID }}
+      SSH_PUBKEY: ${{ secrets.OCI_SSH_PUBKEY }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: OCI CLI kur
+        run: pip install --quiet oci-cli
+
+      - name: Kapasite dene
+        id: dene
+        run: bash hunt.sh
+
+      - name: Sunucu olustuysa issue ac
+        if: steps.dene.outputs.instance_id != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          OCPUS: ${{ steps.dene.outputs.ocpus }}
+          MEMORY: ${{ steps.dene.outputs.memory }}
+          AD: ${{ steps.dene.outputs.ad }}
+          PUBLIC_IP: ${{ steps.dene.outputs.public_ip }}
+          INSTANCE_ID: ${{ steps.dene.outputs.instance_id }}
+        run: |
+          {
+            echo "Oracle Cloud A1.Flex sunucusu olustu."
+            echo
+            echo "- **Boyut:** $OCPUS OCPU / $MEMORY GB"
+            echo "- **Availability domain:** $AD"
+            echo "- **Public IP:** $PUBLIC_IP"
+            echo "- **Instance OCID:** \`$INSTANCE_ID\`"
+            echo
+            echo "Baglanmak icin:"
+            echo
+            echo '```'
+            echo "ssh -i ~/.ssh/trendoptik_oracle ubuntu@$PUBLIC_IP"
+            echo '```'
+            echo
+            echo "Av kendiliginden duracak: sonraki calismalar tenancy'de calisan"
+            echo "sunucu gorurse hicbir sey denemeden cikiyor."
+          } > body.md
+          gh issue create \
+            --title "Sunucu olustu: $OCPUS OCPU / $MEMORY GB" \
+            --body-file body.md
