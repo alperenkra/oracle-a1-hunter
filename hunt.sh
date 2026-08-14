@@ -9,6 +9,8 @@ SURE=${SURE:-240}            # bu calismada denemeye ayrilan saniye
 BEKLE=${BEKLE:-15}           # denemeler arasi aralik
 SHAPES=("4 24" "2 12" "1 6") # buyukten kucuge; ilk tutan alinir
 TENANCY="$OCI_CLI_TENANCY"
+# Secret'tan gelen anahtarda satir sonu kalmis olabilir; metadata JSON'unu bozar.
+SSH_PUBKEY=$(printf '%s' "$SSH_PUBKEY" | tr -d '\n\r')
 
 log() { echo "[$(date -u '+%H:%M:%S')] $*"; }
 
